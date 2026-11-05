@@ -1,20 +1,28 @@
 # Monezy B2B
 
-Aplicativo acadêmico de consulta de limite empresarial, valor utilizado e saldo disponível, desenvolvido em **React Native + Expo + JavaScript**.
+Aplicativo acadêmico de consulta e simulação de limite empresarial. Projeto em **JavaScript**, React Native e Expo.
 
-## Tecnologias previstas
-- React Native, Expo e JavaScript (.js/.jsx, sem TypeScript)
-- Expo Router
-- NativeWind (Tailwind CSS para React Native) e React Native Paper
-- Firebase Firestore (projeto `app-financas-61857`)
-- Firebase Authentication (opcional no enunciado; previsto no backlog)
-- Zustand e Fetch API
+## Requisitos
+- Node.js LTS
+- npm
+- Expo Go no celular ou emulador Android/iOS
+- Projeto Firebase `app-financas-61857`
 
-## Desenvolvimento
-- `main`: versão estável
-- `develop`: integração
-- `feature/*`: funcionalidades, com PR e revisão para `develop`
+## Instalação
+Consulte `docs/INSTALACAO.md`. As dependências nativas devem ser instaladas com `npx expo install` para obter versões compatíveis com o SDK Expo instalado.
 
-> Projeto em planejamento. Instruções completas de instalação, capturas de tela e apresentação serão adicionadas na fase de entrega.
+## Executar
+```bash
+npx expo start
+```
 
-Consulte as [issues](https://github.com/SamuelAndrade-Dev/Monezy-B2B/issues) para acompanhar as tarefas.
+## Estrutura
+- `app/`: rotas Expo Router
+- `src/components/`: componentes reutilizáveis
+- `src/services/`: Firebase e API HTTP
+- `src/store/`: estado global Zustand
+- `src/theme/`: tema React Native Paper
+- `docs/`: instruções de instalação e configuração
+
+## Importante
+O app é uma simulação acadêmica. Não processa pagamentos nem movimenta dinheiro real. Configure as regras do Firestore antes de usar dados reais.
