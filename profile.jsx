@@ -1,0 +1,13 @@
+{
+  "name": "monezy-b2b",
+  "version": "1.0.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "lint": "expo lint"
+  }
+}
