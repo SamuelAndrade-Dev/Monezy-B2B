@@ -1,63 +1,117 @@
-import { useEffect, useState } from "react";
-import { Alert, ScrollView, View } from "react-native";
-import { Button, Card, Text, TextInput } from "react-native-paper";
+import { useMemo, useState } from "react";
+import { Alert, Platform, ScrollView, View } from "react-native";
+import { Button, Card, Dialog, HelperText, Portal, SegmentedButtons, Text, TextInput } from "react-native-paper";
 import Screen from "../../src/components/Screen";
-import { createTransaction, listTransactions } from "../../src/services/transactions";
+import { useAppStore } from "../../src/store/useAppStore";
+import { createTransaction, updateTransaction, deleteTransaction } from "../../src/services/transactions";
+import { brl, dateBR, todayISO } from "../../src/utils/format";
 
+const categories = ["Outros", "Escritório", "Tecnologia", "Transporte", "Alimentação"];
 export default function TransactionsScreen() {
+  const { user, transactions, loading, error } = useAppStore();
+  const [filter, setFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [editing, setEditing] = useState(null);
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  async function load() {
-    try { setItems(await listTransactions()); }
-    catch (error) { /* Firebase pode ainda não estar configurado. */ }
+  const [date, setDate] = useState(todayISO());
+  const [category, setCategory] = useState("Outros");
+  const [type, setType] = useState("expense");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const [deleteId, setDeleteId] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const visible = useMemo(() => transactions.filter(tx =>
+    (filter === "all" || tx.type === filter) &&
+    (!categoryFilter || tx.category?.toLowerCase().includes(categoryFilter.toLowerCase()))
+  ), [transactions, filter, categoryFilter]);
+  function openNew() {
+    setEditing(null); setTitle(""); setAmount(""); setDate(todayISO());
+    setCategory("Outros"); setType("expense"); setMessage(""); setShowForm(true);
   }
-
-  useEffect(() => { load(); }, []);
-
+  function edit(tx) {
+    setEditing(tx.id); setTitle(tx.title || ""); setAmount(String(tx.amount || ""));
+    const d = tx.date?.toDate?.();
+    setDate(d ? `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}` : todayISO());
+    setCategory(tx.category || "Outros"); setType(tx.type || "expense");
+    setMessage(""); setShowForm(true);
+  }
   async function save() {
-    setLoading(true);
+    setBusy(true); setMessage("");
     try {
-      await createTransaction({ title, amount });
-      setTitle("");
-      setAmount("");
-      await load();
-      Alert.alert("Sucesso", "Movimentação registrada no Firestore.");
-    } catch (error) {
-      Alert.alert("Não foi possível salvar", error.message);
-    } finally { setLoading(false); }
+      const data = { title, amount, date, category, type };
+      if (editing) await updateTransaction(user.uid, editing, data);
+      else await createTransaction(user.uid, data);
+      setShowForm(false); setEditing(null);
+    } catch (e) { setMessage(e.message); }
+    finally { setBusy(false); }
   }
-
-  return (
-    <Screen>
-      <ScrollView keyboardShouldPersistTaps="handled">
-        <Text variant="headlineMedium" className="mb-1 font-bold text-slate-900">Movimentações</Text>
-        <Text variant="bodyMedium" className="mb-4 text-slate-500">Registre uma despesa simulada.</Text>
-        <Card className="mb-5 rounded-2xl">
-          <Card.Content>
-            <TextInput label="Descrição" value={title} onChangeText={setTitle} mode="outlined" className="mb-3" />
-            <TextInput label="Valor (R$)" value={amount} onChangeText={setAmount} keyboardType="decimal-pad" mode="outlined" className="mb-3" />
-            <Button mode="contained" onPress={save} loading={loading} disabled={loading}>
-              Salvar movimentação
-            </Button>
-          </Card.Content>
-        </Card>
-        <Text variant="titleLarge" className="mb-3 font-bold text-slate-900">Histórico</Text>
-        {items.length === 0 ? (
-          <Text variant="bodyMedium" className="text-slate-500">
-            Nenhuma movimentação carregada. Configure o Firebase para persistir e listar registros.
+  async function remove() {
+    setBusy(true); setMessage("");
+    try { await deleteTransaction(user.uid, deleteId); setDeleteId(null); }
+    catch (e) { setMessage(e.message); }
+    finally { setBusy(false); }
+  }
+  return <Screen>
+    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 36 }}>
+      <Text variant="headlineMedium" style={{ fontWeight: "bold" }}>Movimentações</Text>
+      <Text variant="bodySmall" style={{ marginBottom: 16 }}>Lançamentos fictícios para fins acadêmicos.</Text>
+      {!!error && <HelperText type="error" visible>{error}</HelperText>}
+      {!!message && <HelperText type="error" visible>{message}</HelperText>}
+      <Button mode="contained" icon="plus" onPress={openNew} style={{ marginBottom: 16 }}>Novo lançamento</Button>
+      <SegmentedButtons value={filter} onValueChange={setFilter} buttons={[
+        { value: "all", label: "Todos" }, { value: "expense", label: "Gastos" }, { value: "credit", label: "Créditos" }
+      ]} />
+      <TextInput mode="outlined" label="Filtrar por categoria" value={categoryFilter}
+        onChangeText={setCategoryFilter} style={{ marginVertical: 12 }} />
+      <Text variant="titleMedium" style={{ marginBottom: 10 }}>Extrato ({visible.length})</Text>
+      {loading && <Text>Carregando movimentações...</Text>}
+      {!loading && visible.length === 0 && <Text>Nenhuma movimentação para este filtro.</Text>}
+      {visible.map(tx => <Card key={tx.id} style={{ marginBottom: 10 }}>
+        <Card.Content>
+          <Text variant="titleMedium">{tx.title}</Text>
+          <Text>{tx.category || "Outros"} · {dateBR(tx.date)}</Text>
+          <Text variant="titleMedium" style={{ marginTop: 4 }}>
+            {tx.type === "credit" ? "+" : "-"} {brl(tx.amount)}
           </Text>
-        ) : items.map((item) => (
-          <Card key={item.id} className="mb-2 rounded-xl">
-            <Card.Content>
-              <Text variant="titleMedium">{item.title}</Text>
-              <Text variant="bodyMedium">R$ {Number(item.amount).toFixed(2).replace(".", ",")}</Text>
-            </Card.Content>
-          </Card>
-        ))}
-      </ScrollView>
-    </Screen>
-  );
+          <View style={{ flexDirection: "row", justifyContent: "flex-end" }}>
+            <Button compact onPress={() => edit(tx)}>Editar</Button>
+            <Button compact textColor="#B91C1C" onPress={() => setDeleteId(tx.id)}>Excluir</Button>
+          </View>
+        </Card.Content>
+      </Card>)}
+    </ScrollView>
+    <Portal>
+      <Dialog visible={showForm} onDismiss={() => !busy && setShowForm(false)}>
+        <Dialog.Title>{editing ? "Editar lançamento" : "Novo lançamento"}</Dialog.Title>
+        <Dialog.ScrollArea style={{ maxHeight: 440 }}>
+          <ScrollView keyboardShouldPersistTaps="handled">
+            <TextInput mode="outlined" label="Descrição" value={title} onChangeText={setTitle} style={{ marginBottom: 10 }} />
+            <TextInput mode="outlined" label="Valor (R$)" value={amount} onChangeText={setAmount}
+              keyboardType="decimal-pad" style={{ marginBottom: 10 }} />
+            <TextInput mode="outlined" label="Data (AAAA-MM-DD)" value={date} onChangeText={setDate}
+              style={{ marginBottom: 10 }} />
+            <TextInput mode="outlined" label="Categoria" value={category} onChangeText={setCategory}
+              style={{ marginBottom: 10 }} />
+            <SegmentedButtons value={type} onValueChange={setType} buttons={[
+              { value: "expense", label: "Gasto" }, { value: "credit", label: "Crédito" }
+            ]} />
+            {!!message && <HelperText type="error" visible>{message}</HelperText>}
+          </ScrollView>
+        </Dialog.ScrollArea>
+        <Dialog.Actions>
+          <Button disabled={busy} onPress={() => setShowForm(false)}>Cancelar</Button>
+          <Button loading={busy} disabled={busy} onPress={save}>Salvar</Button>
+        </Dialog.Actions>
+      </Dialog>
+      <Dialog visible={!!deleteId} onDismiss={() => !busy && setDeleteId(null)}>
+        <Dialog.Title>Excluir movimentação?</Dialog.Title>
+        <Dialog.Content><Text>Esta ação excluirá o lançamento fictício permanentemente.</Text></Dialog.Content>
+        <Dialog.Actions>
+          <Button disabled={busy} onPress={() => setDeleteId(null)}>Cancelar</Button>
+          <Button loading={busy} disabled={busy} textColor="#B91C1C" onPress={remove}>Excluir</Button>
+        </Dialog.Actions>
+      </Dialog>
+    </Portal>
+  </Screen>;
 }
