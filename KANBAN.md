@@ -8,12 +8,12 @@
 - [#3 — [GIT] Organizar Git Flow, branches e revisão por PR](https://github.com/SamuelAndrade-Dev/Monezy-B2B/issues/3)
 
 ## Backlog
-- [#4 — [UI] Configurar NativeWind, React Native Paper e tema](https://github.com/SamuelAndrade-Dev/Monezy-B2B/issues/4)
+- [#4 — [UI] Configurar React Native Paper, StyleSheet e tema](https://github.com/SamuelAndrade-Dev/Monezy-B2B/issues/4)
 - [#5 — [NAVEGAÇÃO] Implementar rotas e navegação entre telas](https://github.com/SamuelAndrade-Dev/Monezy-B2B/issues/5)
 - [#6 — [FIREBASE] Integrar SDK do Firebase e conexão Firestore](https://github.com/SamuelAndrade-Dev/Monezy-B2B/issues/6)
 - [#7 — [DADOS] Definir coleções Firestore e cadastrar demonstração](https://github.com/SamuelAndrade-Dev/Monezy-B2B/issues/7)
 - [#8 — [AUTH] Implementar login e sessão de usuário](https://github.com/SamuelAndrade-Dev/Monezy-B2B/issues/8)
-- [#9 — [ESTADO] Implementar estado global com Zustand](https://github.com/SamuelAndrade-Dev/Monezy-B2B/issues/9)
+- [#9 — [ESTADO] Implementar estado compartilhado com React Context](https://github.com/SamuelAndrade-Dev/Monezy-B2B/issues/9)
 - [#10 — [DASHBOARD] Exibir limite total, utilizado e disponível](https://github.com/SamuelAndrade-Dev/Monezy-B2B/issues/10)
 - [#11 — [EXTRATO] Listar e filtrar movimentações demonstrativas](https://github.com/SamuelAndrade-Dev/Monezy-B2B/issues/11)
 - [#12 — [CRUD] Criar formulário para registrar, editar e excluir gasto simulado](https://github.com/SamuelAndrade-Dev/Monezy-B2B/issues/12)
@@ -39,13 +39,13 @@
 2. Criar branch `feature/<nome-curto>` saindo de `develop`.
 3. Abrir PR para `develop` e pedir revisão a outro integrante.
 4. Atualizar o quadro provisório, ou preferencialmente mover o card no GitHub Projects quando criado.
-5. Priorizar requisitos obrigatórios do professor: UI/Flexbox, navegação, estado, formulário, recurso nativo, Firestore e Git Flow.
+5. Priorizar requisitos obrigatórios do professor: UI/Flexbox, navegação, estado React, formulário, recurso nativo, Firestore via backend e Git Flow.
 
 ## Sugestão para o GitHub Projects
 Crie um novo projeto do tipo **Board** e use as colunas: `Backlog`, `A fazer`, `Em andamento`, `Em revisão` e `Concluído`. Adicione todas as issues #1 a #19 ao projeto e use o campo `Status` para mover as tarefas.
 
 ## Divisão provisória das frentes
 - **Frente 1 — UI e navegação:** visual, componentes, dashboard, extrato.
-- **Frente 2 — Firebase e dados:** Firestore, Auth, regras, CRUD.
+- **Frente 2 — Firebase e dados:** Auth, Firestore Admin, regras, API e CRUD.
 - **Frente 3 — integração e qualidade:** Expo/configuração, estado, API, recursos nativos e testes.
 - **Todos:** escopo, PRs, QA e entrega. Distribuição final a definir com o trio.

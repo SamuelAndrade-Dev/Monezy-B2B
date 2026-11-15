@@ -1,58 +1,67 @@
 # Instalação local — Monezy B2B
 
 ## 1. Pré-requisitos
-Instale Node.js LTS e npm. Para testar no celular, instale Expo Go. Para Android nativo, configure Android Studio; para iOS nativo, é necessário macOS e Xcode.
+Instale Node.js 22 ou superior e npm. Para testar no celular, instale Expo Go. Para Android nativo, configure Android Studio; para iOS nativo, é necessário macOS e Xcode.
 
 ## 2. Instalar dependências
-Abra o terminal dentro da pasta `monezy-b2b` e execute:
+Na raiz do repositório, instale os workspaces com:
 
 ```bash
 npm install
-npx expo install expo-router expo-constants expo-linking expo-status-bar react-native-screens react-native-safe-area-context react-native-gesture-handler react-native-reanimated react-native-svg
-npx expo install firebase
-npx expo install react-native-paper react-native-safe-area-context
-npm install zustand
-npm install nativewind
-npm install -D tailwindcss@^3.4.17
 ```
 
-Se o Expo indicar dependências incompatíveis, execute:
-```bash
-npx expo install --fix
-```
+O Expo Router, React Native Paper e Firebase Client estão declarados em `front-end/package.json`; Express e Firebase Admin, em `server/package.json`. Não instale NativeWind, Tailwind ou Zustand.
 
-## 3. Configurar Firebase
-1. Abra https://console.firebase.google.com/project/app-financas-61857/overview
-2. Em Configurações do projeto > Geral, registre um aplicativo Web para obter as credenciais.
-3. Ative Authentication (E-mail/senha) se o fluxo de login for utilizado.
-4. Crie o Firestore Database.
-5. Copie `.env.example` para `.env` e preencha os valores da configuração Web:
+## 3. Configurar frontend
+Crie `front-end/.env` a partir do exemplo e preencha a configuração do aplicativo Web Firebase e a URL da API:
 
 ```bash
-cp .env.example .env
+cp front-end/.env.example front-end/.env
 ```
 
 No PowerShell:
 ```powershell
-Copy-Item .env.example .env
+Copy-Item front-end/.env.example front-end/.env
 ```
 
-As variáveis `EXPO_PUBLIC_*` são incorporadas ao app. Não coloque senhas, chaves privadas ou credenciais de servidor nelas. A API key do Firebase Web identifica o projeto; a segurança deve ser feita com Authentication e regras do Firestore.
+Ative o método de autenticação e-mail/senha no Firebase Console. As variáveis `EXPO_PUBLIC_*` são incluídas no bundle do app: não coloque segredos administrativos nelas. Para testar em um aparelho físico, troque `localhost` em `EXPO_PUBLIC_API_URL` pelo endereço IP local do computador.
 
-## 4. Iniciar
+## 4. Configurar backend
+Crie `server/.env` a partir do exemplo:
+
 ```bash
-npx expo start
+cp server/.env.example server/.env
 ```
+Configure `FIREBASE_PROJECT_ID` e uma credencial Firebase Admin fora do repositório: `FIREBASE_SERVICE_ACCOUNT_JSON` (JSON em uma única variável) ou `GOOGLE_APPLICATION_CREDENTIALS` (caminho protegido para arquivo de credenciais). Nunca coloque essa credencial no app ou versione o arquivo. `CORS_ORIGIN` aceita uma lista de origens separadas por vírgula. Em desenvolvimento, pode-se usar o emulador Firestore com `FIRESTORE_EMULATOR_HOST`.
+
+Crie `users/{uid}` no Firestore para cada usuário permitido e associe `companyId`. Em `companies/{companyId}/accounts/{accountId}`, configure `name`, `creditLimit`, `usedLimit` e, opcionalmente, `currency`. A identidade da empresa vem do perfil lido pelo servidor; o cliente não pode escolher outra empresa.
+
+As regras são negadas por padrão porque os clientes não executam operações de negócio diretamente no Firestore. Para publicar regras e índices com Firebase CLI:
+
+```bash
+firebase deploy --only firestore
+```
+
+## 5. Iniciar
+Em terminais separados:
+
+```bash
+npm run start:server
+npm start
+```
+
 Leia o QR Code com Expo Go. Para limpar o cache:
 ```bash
-npx expo start -c
+npm run start --workspace @monezy/front-end -- --clear
 ```
 
-## 5. Problemas comuns
-- `Unable to resolve module`: rode `npm install` e reinicie com `npx expo start -c`.
-- Dependências nativas incompatíveis: rode `npx expo install --fix`.
-- Firebase sem configuração: confira o arquivo `.env` e reinicie o Metro.
-- NativeWind sem estilos: confira `babel.config.js`, `metro.config.js`, `tailwind.config.js` e `global.css`.
+## 6. Testes e problemas comuns
+Execute `npm test` na raiz para os testes HTTP do backend. Sem credenciais Firebase, a API inicia e responde no endpoint `/health`, mas chamadas protegidas retornam `FIREBASE_NOT_CONFIGURED`.
 
-## 6. Nota sobre SDK
-O Expo evolui frequentemente. Por isso, use `npx expo install` para módulos compatíveis com o SDK instalado, em vez de fixar manualmente versões de bibliotecas nativas.
+- `Unable to resolve module`: execute `npm install` na raiz e reinicie o Expo.
+- API inacessível no aparelho físico: confira o IP configurado em `EXPO_PUBLIC_API_URL`, a rede local e `CORS_ORIGIN`.
+- Firebase sem configuração: confira os arquivos `.env` de cada workspace e reinicie o Expo/servidor.
+- `COMPANY_ACCESS_REQUIRED`: crie o documento `users/{uid}` e defina seu `companyId`.
+
+## 7. Nota sobre operações
+Movimentações apenas simulam o uso do limite empresarial. Nenhuma transação bancária real é processada.
