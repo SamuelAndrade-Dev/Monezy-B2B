@@ -1,4 +1,4 @@
-import { Alert, StyleSheet } from "react-native";
+import { Alert, ScrollView, StyleSheet } from "react-native";
 import { Avatar, Button, Card, Text } from "react-native-paper";
 import Screen from "../../components/layout/Screen";
 import { colors } from "../../constants/colors";
@@ -23,6 +23,7 @@ export default function ProfileScreen() {
 
   return (
     <Screen>
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
       <Text variant="headlineMedium" style={styles.heading}>Perfil</Text>
       <Card style={styles.card}>
         <Card.Content style={styles.content}>
@@ -39,11 +40,18 @@ export default function ProfileScreen() {
       <Button mode="outlined" style={styles.button} onPress={handleSignOut}>
         Sair da conta
       </Button>
+      </ScrollView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollContent: {
+    width: "100%",
+    maxWidth: 520,
+    alignSelf: "center",
+    paddingBottom: 32
+  },
   heading: {
     marginBottom: 20,
     color: colors.text,

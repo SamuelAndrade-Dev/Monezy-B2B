@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
 import { Button, Text, TextInput } from "react-native-paper";
 import { Redirect } from "expo-router";
 import Screen from "../../components/layout/Screen";
@@ -40,7 +40,9 @@ export default function LoginScreen() {
 
   return (
     <Screen style={styles.screen}>
-      <View style={styles.content}>
+      <KeyboardAvoidingView style={styles.keyboardContainer} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.scrollContent}>
+          <View style={styles.content}>
         <Text variant="headlineLarge" style={styles.title}>Monezy B2B</Text>
         <Text variant="bodyLarge" style={styles.subtitle}>Entre para consultar sua conta empresarial.</Text>
         {!configured ? (
@@ -79,16 +81,29 @@ export default function LoginScreen() {
         <Text variant="bodySmall" style={styles.note}>
           A demonstração usa valores fictícios e não acessa a API.
         </Text>
-      </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
-    justifyContent: "center"
+    flex: 1
+  },
+  keyboardContainer: {
+    flex: 1
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    paddingVertical: 20
   },
   content: {
+    width: "100%",
+    maxWidth: 480,
+    alignSelf: "center",
     gap: 14,
     paddingVertical: 24
   },
