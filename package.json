@@ -1,0 +1,21 @@
+{
+  "name": "monezy-b2b",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "front-end",
+    "server"
+  ],
+  "overrides": {
+    "@grpc/grpc-js": "^1.14.7",
+    "uuid": "^11.1.1"
+  },
+  "scripts": {
+    "start": "npm run start --workspace @monezy/front-end",
+    "android": "npm run android --workspace @monezy/front-end",
+    "ios": "npm run ios --workspace @monezy/front-end",
+    "web": "npm run web --workspace @monezy/front-end",
+    "test": "npm run test --workspace @monezy/server",
+    "start:server": "npm run start --workspace @monezy/server"
+  }
+}
