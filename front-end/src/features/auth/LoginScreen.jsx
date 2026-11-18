@@ -97,6 +97,9 @@ const styles = StyleSheet.create({
     paddingVertical: 24
   },
   content: {
+    width: "100%",
+    maxWidth: 480,
+    alignSelf: "center",
     gap: 14,
     width: "100%",
     maxWidth: 460,

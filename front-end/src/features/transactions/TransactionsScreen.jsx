@@ -46,6 +46,12 @@ export default function TransactionsScreen() {
   const load = useCallback(async () => {
     setLoadError("");
     setLoadingList(true);
+    if (demoMode) {
+      setAccounts([]);
+      setItems([]);
+      setLoadingList(false);
+      return;
+    }
     try {
       const token = await getIdToken();
       const availableAccounts = await listAccounts(token);
@@ -71,7 +77,7 @@ export default function TransactionsScreen() {
     } finally {
       setLoadingList(false);
     }
-  }, [getIdToken, accountId]);
+  }, [getIdToken, accountId, demoMode]);
 
   useEffect(() => {
     load();
@@ -209,7 +215,7 @@ export default function TransactionsScreen() {
         {loadingList ? <ActivityIndicator style={styles.listLoading} /> : null}
         {!loadingList && !loadError && items.length === 0 ? (
           <Text variant="bodyMedium" style={styles.empty}>
-            {accounts.length ? "Nenhuma movimentação nesta conta." : "Nenhuma conta empresarial vinculada."}
+            {demoMode ? "O histórico fica disponível após entrar com o Firebase." : accounts.length ? "Nenhuma movimentação nesta conta." : "Nenhuma conta empresarial vinculada."}
           </Text>
         ) : !loadingList && items.map((item) => (
           <Card key={item.id} style={styles.transactionCard}>
@@ -218,12 +224,14 @@ export default function TransactionsScreen() {
                 <Text variant="titleMedium">{item.title}</Text>
                 <Text variant="bodyMedium">{formatCurrency(item.amount, item.currency)}</Text>
               </View>
-              <Button compact onPress={() => edit(item)} accessibilityLabel={`Editar ${item.title}`}>
-                Editar
-              </Button>
-              <Button compact onPress={() => confirmRemove(item)} accessibilityLabel={`Excluir ${item.title}`}>
-                Excluir
-              </Button>
+              <View style={styles.transactionActions}>
+                <Button compact onPress={() => edit(item)} accessibilityLabel={`Editar ${item.title}`}>
+                  Editar
+                </Button>
+                <Button compact onPress={() => confirmRemove(item)} accessibilityLabel={`Excluir ${item.title}`}>
+                  Excluir
+                </Button>
+              </View>
             </Card.Content>
           </Card>
         ))}
@@ -309,11 +317,20 @@ const styles = StyleSheet.create({
   transactionContent: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between"
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: 8
   },
   transactionDetails: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 1,
+    minWidth: 140,
     gap: 4
+  },
+  transactionActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    flexWrap: "wrap"
   },
   disclaimer: {
     marginTop: 16,

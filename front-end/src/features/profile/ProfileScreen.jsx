@@ -57,8 +57,15 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   scrollContent: {
+<<<<<<< HEAD
     flexGrow: 1,
     paddingBottom: 24
+=======
+    width: "100%",
+    maxWidth: 520,
+    alignSelf: "center",
+    paddingBottom: 32
+>>>>>>> origin/develop
   },
   heading: {
     marginBottom: 20,
