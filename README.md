@@ -18,6 +18,36 @@ npm run start:server
 npm start
 ```
 
+## Executar em outro computador
+
+1. Instale Git, Node.js 22 ou superior e npm; para testar no celular, instale Expo Go. Clone o repositório e entre na pasta do projeto.
+2. Instale as dependências e crie os arquivos locais de configuração:
+
+   ```bash
+   npm ci
+   cp front-end/.env.example front-end/.env
+   cp server/.env.example server/.env
+   ```
+
+   No Windows PowerShell, use `Copy-Item front-end/.env.example front-end/.env` e `Copy-Item server/.env.example server/.env`.
+3. No `front-end/.env`, preencha os valores da aplicação Web Firebase (`EXPO_PUBLIC_FIREBASE_API_KEY`, `EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN`, `EXPO_PUBLIC_FIREBASE_PROJECT_ID` e `EXPO_PUBLIC_FIREBASE_APP_ID`). Para consultar os valores, use **Configurações do projeto → Geral → Seus apps** no Firebase Console. A API key do Firebase Client não é uma credencial administrativa; nunca coloque chaves privadas nas variáveis `EXPO_PUBLIC_*`.
+4. No `server/.env`, mantenha o Project ID e configure **uma** forma de credencial Admin: `GOOGLE_APPLICATION_CREDENTIALS` com o caminho absoluto para o arquivo JSON privado, ou `FIREBASE_SERVICE_ACCOUNT_JSON`. Prefira guardar o arquivo fora do repositório. Não envie nem versione o arquivo ou seu conteúdo.
+5. Se o Expo Go estiver em outro dispositivo, conecte-o à mesma rede Wi-Fi do computador que executa o backend. Descubra o IP local desse computador e configure no `front-end/.env`:
+
+   ```env
+   EXPO_PUBLIC_API_URL=http://<IP_LOCAL_DO_COMPUTADOR>:3000/api/v1
+   ```
+
+   Para encontrar o IP: no Windows, execute `ipconfig` e use o IPv4 do Wi-Fi; no macOS, `ipconfig getifaddr en0`; no Linux, `hostname -I`. `localhost` só serve quando o cliente e a API estão no mesmo computador. O IP pode mudar ao trocar de rede; atualize essa variável e reinicie o Expo. Permita conexões locais na porta `3000` no firewall, se solicitado.
+6. Inicie os processos em terminais separados:
+
+   ```bash
+   npm run start:server
+   npm run start --workspace @monezy/front-end -- --lan
+   ```
+
+   Confirme a API abrindo `http://<IP_LOCAL_DO_COMPUTADOR>:3000/health`, depois leia o QR Code com Expo Go. As variáveis `.env` são locais e precisam ser configuradas separadamente em cada computador.
+
 ## Demonstração acadêmica
 
 1. Inicie o backend e o Expo conforme [docs/INSTALACAO.md](./docs/INSTALACAO.md).
