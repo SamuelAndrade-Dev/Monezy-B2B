@@ -18,6 +18,34 @@ npm run start:server
 npm start
 ```
 
+## Iniciar diretamente pelo Expo CLI
+
+O aplicativo Expo está na pasta `front-end/`. Após `npm ci` na raiz, execute em **dois terminais**:
+
+**Terminal 1 — backend (a partir da raiz):**
+
+```bash
+npm run start:server
+```
+
+**Terminal 2 — aplicativo (a partir da raiz):**
+
+```bash
+cd front-end
+npx expo start
+```
+
+O comando `npx expo start` deve ser executado dentro de `front-end`, onde estão `app.json`, `package.json` e as rotas do Expo Router. Na raiz do monorepo, use `npm start`, que encaminha o comando ao workspace correto. No celular, use uma versão do Expo Go compatível com o SDK 58 e verifique a conectividade com a URL da API.
+
+Para checar dependências e testes antes da apresentação:
+
+```bash
+npm test
+npm exec --workspace @monezy/front-end -- expo install --check
+```
+
+A execução em aparelho real e a conexão autenticada com o Firestore devem ser confirmadas manualmente; testes automatizados com mocks não substituem essa verificação.
+
 ## Executar em outro computador
 
 1. Instale Git, Node.js 22 ou superior e npm; para testar no celular, instale Expo Go. Clone o repositório e entre na pasta do projeto.
