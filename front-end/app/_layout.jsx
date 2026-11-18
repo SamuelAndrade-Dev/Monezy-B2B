@@ -1,30 +1,49 @@
-import "../global.css";
-import { useEffect } from "react";
 import { Stack } from "expo-router";
 import { PaperProvider, ActivityIndicator, Text } from "react-native-paper";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { AuthProvider, useAuth } from "../src/contexts/AuthContext";
 import { paperTheme } from "../src/theme/paperTheme";
-import { useAppStore } from "../src/store/useAppStore";
+
+function RootNavigator() {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator />
+        <Text>Verificando sessão...</Text>
+      </View>
+    );
+  }
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" />
+      <Stack.Protected guard={!isAuthenticated}>
+        <Stack.Screen name="(auth)" />
+      </Stack.Protected>
+      <Stack.Protected guard={isAuthenticated}>
+        <Stack.Screen name="(tabs)" />
+      </Stack.Protected>
+    </Stack>
+  );
+}
 
 export default function RootLayout() {
-  const start = useAppStore(s => s.start);
-  const authLoading = useAppStore(s => s.authLoading);
-  const user = useAppStore(s => s.user);
-  useEffect(() => { start(); }, [start]);
   return (
     <PaperProvider theme={paperTheme}>
-      {authLoading ? (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <ActivityIndicator /><Text>Verificando sessão...</Text>
-        </View>
-      ) : (
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Protected guard={!user}><Stack.Screen name="login" /></Stack.Protected>
-          <Stack.Protected guard={!!user}>
-            <Stack.Screen name="(tabs)" />
-          </Stack.Protected>
-        </Stack>
-      )}
+      <AuthProvider>
+        <RootNavigator />
+      </AuthProvider>
     </PaperProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  loading: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 12
+  }
+});

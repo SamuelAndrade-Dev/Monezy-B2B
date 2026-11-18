@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { Alert, ScrollView, StyleSheet, View } from "react-native";
-import { Button, Card, Menu, Text, TextInput } from "react-native-paper";
+import { Alert, Platform, ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Button, Card, Menu, Text, TextInput } from "react-native-paper";
+import * as Haptics from "expo-haptics";
 import Screen from "../../components/layout/Screen";
 import { colors } from "../../constants/colors";
 import { useAuth } from "../../contexts/AuthContext";
@@ -8,7 +9,8 @@ import { listAccounts } from "../../services/api/accounts";
 import {
   createTransaction,
   deleteTransaction,
-  listTransactions
+  listTransactions,
+  updateTransaction
 } from "../../services/api/transactions";
 
 function formatCurrency(amount, currency = "BRL") {
@@ -16,18 +18,22 @@ function formatCurrency(amount, currency = "BRL") {
 }
 
 export default function TransactionsScreen() {
-  const { getIdToken } = useAuth();
+  const { demoMode, getIdToken } = useAuth();
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
+  const [editingId, setEditingId] = useState("");
   const [accounts, setAccounts] = useState([]);
   const [accountId, setAccountId] = useState("");
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingList, setLoadingList] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [formError, setFormError] = useState("");
   const [menuVisible, setMenuVisible] = useState(false);
 
   const load = useCallback(async () => {
     setLoadError("");
+    setLoadingList(true);
     try {
       const token = await getIdToken();
       const availableAccounts = await listAccounts(token);
@@ -41,6 +47,8 @@ export default function TransactionsScreen() {
       setAccounts([]);
       setItems([]);
       setLoadError(error.message);
+    } finally {
+      setLoadingList(false);
     }
   }, [getIdToken, accountId]);
 
@@ -49,22 +57,43 @@ export default function TransactionsScreen() {
   }, [load]);
 
   async function save() {
+    const normalizedTitle = title.trim();
+    const normalizedAmount = amount.trim().replace(",", ".");
+    const parsedAmount = Number(normalizedAmount);
+    if (!normalizedTitle || normalizedTitle.length > 120) {
+      setFormError("Informe uma descrição com até 120 caracteres.");
+      return;
+    }
+    if (!/^\d+(?:\.\d{1,2})?$/.test(normalizedAmount) || !Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      setFormError("Informe um valor positivo com até duas casas decimais.");
+      return;
+    }
     if (!accountId) {
       Alert.alert("Conta necessária", "Nenhuma conta empresarial foi vinculada a este usuário.");
       return;
     }
+    setFormError("");
     setLoading(true);
     try {
       const token = await getIdToken();
-      await createTransaction({
-        accountId,
-        title,
-        amount: Number(amount.replace(",", "."))
-      }, token);
+      if (editingId) {
+        await updateTransaction(editingId, { title: normalizedTitle, amount: parsedAmount }, token);
+      } else {
+        await createTransaction({
+          accountId,
+          title: normalizedTitle,
+          amount: parsedAmount
+        }, token);
+      }
       setTitle("");
       setAmount("");
+      setEditingId("");
       await load();
-      Alert.alert("Sucesso", "Movimentação simulada registrada.");
+      if (!editingId && Platform.OS !== "web") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+          .catch((error) => console.warn("Não foi possível executar o feedback tátil.", error));
+      }
+      Alert.alert("Sucesso", editingId ? "Movimentação atualizada." : "Movimentação simulada registrada.");
     } catch (error) {
       Alert.alert("Não foi possível salvar", error.message);
     } finally {
@@ -72,14 +101,36 @@ export default function TransactionsScreen() {
     }
   }
 
+  function edit(item) {
+    setEditingId(item.id);
+    setTitle(item.title);
+    setAmount(String(item.amount).replace(".", ","));
+    setFormError("");
+  }
+
+  function cancelEdit() {
+    setEditingId("");
+    setTitle("");
+    setAmount("");
+    setFormError("");
+  }
+
   async function remove(item) {
     try {
       const token = await getIdToken();
       await deleteTransaction(item.id, token);
+      if (editingId === item.id) cancelEdit();
       await load();
     } catch (error) {
       Alert.alert("Não foi possível excluir", error.message);
     }
+  }
+
+  function confirmRemove(item) {
+    Alert.alert("Excluir movimentação", `Deseja excluir "${item.title}"?`, [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Excluir", style: "destructive", onPress: () => remove(item) }
+    ]);
   }
 
   const selectedAccount = accounts.find((item) => item.id === accountId);
@@ -120,9 +171,14 @@ export default function TransactionsScreen() {
               mode="outlined"
               style={styles.input}
             />
-            <Button mode="contained" onPress={save} loading={loading} disabled={loading || !accountId}>
-              Salvar movimentação
+            {formError ? <Text accessibilityRole="alert" style={styles.error}>{formError}</Text> : null}
+            {demoMode ? (
+              <Text style={styles.error}>Entre com uma conta Firebase para registrar movimentações na API.</Text>
+            ) : null}
+            <Button mode="contained" onPress={save} loading={loading} disabled={loading || !accountId || demoMode}>
+              {editingId ? "Atualizar movimentação" : "Salvar movimentação"}
             </Button>
+            {editingId ? <Button onPress={cancelEdit} disabled={loading}>Cancelar edição</Button> : null}
           </Card.Content>
         </Card>
         <View style={styles.historyHeader}>
@@ -130,18 +186,22 @@ export default function TransactionsScreen() {
           <Button compact onPress={load}>Atualizar</Button>
         </View>
         {loadError ? <Text accessibilityRole="alert" style={styles.error}>{loadError}</Text> : null}
-        {!loadError && items.length === 0 ? (
+        {loadingList ? <ActivityIndicator style={styles.listLoading} /> : null}
+        {!loadingList && !loadError && items.length === 0 ? (
           <Text variant="bodyMedium" style={styles.empty}>
             {accounts.length ? "Nenhuma movimentação nesta conta." : "Nenhuma conta empresarial vinculada."}
           </Text>
-        ) : items.map((item) => (
+        ) : !loadingList && items.map((item) => (
           <Card key={item.id} style={styles.transactionCard}>
             <Card.Content style={styles.transactionContent}>
               <View style={styles.transactionDetails}>
                 <Text variant="titleMedium">{item.title}</Text>
                 <Text variant="bodyMedium">{formatCurrency(item.amount, item.currency)}</Text>
               </View>
-              <Button compact onPress={() => remove(item)} accessibilityLabel={`Excluir ${item.title}`}>
+              <Button compact onPress={() => edit(item)} accessibilityLabel={`Editar ${item.title}`}>
+                Editar
+              </Button>
+              <Button compact onPress={() => confirmRemove(item)} accessibilityLabel={`Excluir ${item.title}`}>
                 Excluir
               </Button>
             </Card.Content>
@@ -190,6 +250,9 @@ const styles = StyleSheet.create({
   },
   error: {
     color: colors.error
+  },
+  listLoading: {
+    marginVertical: 16
   },
   empty: {
     color: colors.muted

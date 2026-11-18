@@ -13,10 +13,21 @@ Aplicativo acadêmico para consultar limites empresariais e registrar movimenta�
 Consulte [docs/INSTALACAO.md](./docs/INSTALACAO.md). Na raiz:
 
 ```bash
-npm install
+npm ci
 npm run start:server
 npm start
 ```
+
+## Demonstração acadêmica
+
+1. Inicie o backend e o Expo conforme [docs/INSTALACAO.md](./docs/INSTALACAO.md).
+2. Entre com o usuário de teste configurado no Firebase Authentication.
+3. Confira o limite total, utilizado e disponível no dashboard; use **Atualizar resumo** para buscar novamente pela API.
+4. Registre uma movimentação com descrição e valor fictício. Em dispositivo compatível, o app emite feedback tátil após a resposta bem-sucedida da API.
+5. Edite e exclua a movimentação e confira o histórico e o limite atualizado.
+6. Abra o perfil e encerre a sessão.
+
+O modo demonstração usa indicadores fictícios e não persiste movimentações. A validação de haptics em um aparelho físico ainda depende de execução local com Expo Go ou build nativo.
 
 O frontend e o backend são workspaces npm independentes. Configure as variáveis de ambiente em `front-end/.env` e `server/.env` antes de usar os serviços Firebase e a API.
 
