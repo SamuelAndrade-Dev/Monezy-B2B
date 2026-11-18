@@ -195,7 +195,7 @@ export default function TransactionsScreen() {
         {loadingList ? <ActivityIndicator style={styles.listLoading} /> : null}
         {!loadingList && !loadError && items.length === 0 ? (
           <Text variant="bodyMedium" style={styles.empty}>
-            {accounts.length ? "Nenhuma movimentação nesta conta." : "Nenhuma conta empresarial vinculada."}
+            {demoMode ? "O histórico fica disponível após entrar com o Firebase." : accounts.length ? "Nenhuma movimentação nesta conta." : "Nenhuma conta empresarial vinculada."}
           </Text>
         ) : !loadingList && items.map((item) => (
           <Card key={item.id} style={styles.transactionCard}>
