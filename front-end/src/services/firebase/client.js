@@ -15,8 +15,19 @@ const firebaseConfig = {
 };
 
 export const firebaseConfigured = Boolean(
-  firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId
+  firebaseConfig.apiKey?.trim() &&
+  firebaseConfig.authDomain?.trim() &&
+  firebaseConfig.projectId?.trim() &&
+  firebaseConfig.appId?.trim()
 );
+export const missingFirebaseConfig = [
+  ["EXPO_PUBLIC_FIREBASE_API_KEY", firebaseConfig.apiKey],
+  ["EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN", firebaseConfig.authDomain],
+  ["EXPO_PUBLIC_FIREBASE_PROJECT_ID", firebaseConfig.projectId],
+  ["EXPO_PUBLIC_FIREBASE_APP_ID", firebaseConfig.appId]
+]
+  .filter(([, value]) => !value?.trim())
+  .map(([name]) => name);
 
 const app = firebaseConfigured
   ? (getApps().length ? getApp() : initializeApp(firebaseConfig))

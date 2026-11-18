@@ -1,17 +1,19 @@
-import { Alert, ScrollView, StyleSheet } from "react-native";
-import { Avatar, Button, Card, Text } from "react-native-paper";
+import { useState } from "react";
+import { ScrollView, StyleSheet } from "react-native";
+import { Avatar, Button, Card, Snackbar, Text } from "react-native-paper";
 import Screen from "../../components/layout/Screen";
 import { colors } from "../../constants/colors";
 import { useAuth } from "../../contexts/AuthContext";
 
 export default function ProfileScreen() {
   const { user, demoMode, signOut } = useAuth();
+  const [errorMessage, setErrorMessage] = useState("");
 
   async function handleSignOut() {
     try {
       await signOut();
     } catch (error) {
-      Alert.alert("Não foi possível sair", error.message);
+      setErrorMessage(`Não foi possível sair: ${error.message}`);
     }
   }
 
@@ -23,34 +25,47 @@ export default function ProfileScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-      <Text variant="headlineMedium" style={styles.heading}>Perfil</Text>
-      <Card style={styles.card}>
-        <Card.Content style={styles.content}>
-          <Avatar.Text size={76} label={label || "MB"} style={styles.avatar} color={colors.primary} />
-          <Text variant="titleLarge" style={styles.name}>{user?.displayName || "Usuário Monezy"}</Text>
-          <Text variant="bodyMedium" style={styles.email}>
-            {demoMode ? "Sessão demonstrativa" : user?.email || "Conta autenticada"}
-          </Text>
-        </Card.Content>
-      </Card>
-      <Text variant="bodySmall" style={styles.note}>
-        As informações empresariais são carregadas pela API autenticada.
-      </Text>
-      <Button mode="outlined" style={styles.button} onPress={handleSignOut}>
-        Sair da conta
-      </Button>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Text variant="headlineMedium" style={styles.heading}>Perfil</Text>
+        <Card style={styles.card}>
+          <Card.Content style={styles.content}>
+            <Avatar.Text size={76} label={label || "MB"} style={styles.avatar} color={colors.primary} />
+            <Text variant="titleLarge" style={styles.name}>{user?.displayName || "Usuário Monezy"}</Text>
+            <Text variant="bodyMedium" style={styles.email}>
+              {demoMode ? "Sessão demonstrativa" : user?.email || "Conta autenticada"}
+            </Text>
+            {user?.uid ? <Text variant="bodySmall" style={styles.email}>UID: {user.uid}</Text> : null}
+          </Card.Content>
+        </Card>
+        <Text variant="bodySmall" style={styles.note}>
+          As informações empresariais são carregadas pela API autenticada.
+        </Text>
+        <Button mode="outlined" style={styles.button} onPress={handleSignOut}>
+          Sair da conta
+        </Button>
       </ScrollView>
+      <Snackbar
+        visible={Boolean(errorMessage)}
+        onDismiss={() => setErrorMessage("")}
+        duration={4000}
+      >
+        {errorMessage}
+      </Snackbar>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   scrollContent: {
+<<<<<<< HEAD
+    flexGrow: 1,
+    paddingBottom: 24
+=======
     width: "100%",
     maxWidth: 520,
     alignSelf: "center",
     paddingBottom: 32
+>>>>>>> origin/develop
   },
   heading: {
     marginBottom: 20,

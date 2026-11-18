@@ -8,6 +8,24 @@ import { errorHandler, notFoundHandler } from "./middlewares/errorHandler.js";
 import { AppError } from "./utils/AppError.js";
 import { getServerConfig } from "./config/env.js";
 
+function isAllowedOrigin(origin, corsOrigins) {
+  if (corsOrigins.includes(origin)) return true;
+
+  try {
+    const requested = new URL(origin);
+    if (requested.hostname !== "127.0.0.1" && requested.hostname !== "localhost") return false;
+    return corsOrigins.some((allowedOrigin) => {
+      const allowed = new URL(allowedOrigin);
+      return allowed.protocol === requested.protocol &&
+        allowed.port === requested.port &&
+        ((allowed.hostname === "localhost" && requested.hostname === "127.0.0.1") ||
+          (allowed.hostname === "127.0.0.1" && requested.hostname === "localhost"));
+    });
+  } catch {
+    return false;
+  }
+}
+
 export function createApp({
   verifyToken = verifyIdToken,
   accountRoutes = accountsRoutes,
@@ -18,7 +36,7 @@ export function createApp({
   app.disable("x-powered-by");
   app.use(cors({
     origin(origin, callback) {
-      if (!origin || corsOrigins.includes(origin)) return callback(null, true);
+      if (!origin || isAllowedOrigin(origin, corsOrigins)) return callback(null, true);
       return callback(new AppError(403, "ORIGIN_NOT_ALLOWED", "Origem não autorizada."));
     }
   }));
