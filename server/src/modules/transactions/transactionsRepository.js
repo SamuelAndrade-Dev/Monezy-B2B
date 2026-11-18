@@ -34,10 +34,17 @@ export function createTransactionsRepository({
   }
 
   async function list(companyId, accountId) {
-    let query = transactionsRef(companyId).orderBy("createdAt", "desc");
-    if (accountId) query = query.where("accountId", "==", accountId);
+    const collection = transactionsRef(companyId);
+    const query = accountId
+      ? collection.where("accountId", "==", accountId)
+      : collection.orderBy("createdAt", "desc");
     const snapshot = await query.get();
-    return snapshot.docs.map(normalizeTransaction);
+    const transactions = snapshot.docs.map(normalizeTransaction);
+    if (!accountId) return transactions;
+
+    return transactions
+      .filter((transaction) => transaction.createdAt)
+      .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
   }
 
   async function create(companyId, uid, input) {

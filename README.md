@@ -5,7 +5,7 @@ Aplicativo acadêmico para consultar limites empresariais e registrar movimenta�
 ## Requisitos
 
 - Node.js 22 ou superior e npm
-- Expo Go ou emulador Android/iOS
+- Google Chrome para executar e testar a versão web
 - Um projeto Firebase com Authentication (e-mail/senha) e Firestore habilitados
 
 ## Instalação e execução
@@ -15,12 +15,20 @@ Consulte [docs/INSTALACAO.md](./docs/INSTALACAO.md). Na raiz:
 ```bash
 npm ci
 npm run start:server
-npm start
 ```
+
+Em outro terminal, inicie o Expo Web dentro do workspace frontend:
+
+```bash
+cd front-end
+npx expo start --web
+```
+
+Abra a URL exibida pelo Expo (normalmente `http://localhost:8081`) e use o modo de dispositivo do Chrome. Não execute `npx expo start` na raiz do monorepo: o app Expo fica em `front-end/`. Se a porta 8081 estiver ocupada, encerre o Metro antigo com `Ctrl+C` ou use a porta indicada pelo Expo.
 
 ## Executar em outro computador
 
-1. Instale Git, Node.js 22 ou superior e npm; para testar no celular, instale Expo Go. Clone o repositório e entre na pasta do projeto.
+1. Instale Git, Node.js 22 ou superior, npm e Google Chrome. Clone o repositório e entre na pasta do projeto.
 2. Instale as dependências e crie os arquivos locais de configuração:
 
    ```bash
@@ -43,21 +51,27 @@ npm start
 
    ```bash
    npm run start:server
-   npm run start --workspace @monezy/front-end -- --lan
    ```
 
-   Confirme a API abrindo `http://<IP_LOCAL_DO_COMPUTADOR>:3000/health`, depois leia o QR Code com Expo Go. As variáveis `.env` são locais e precisam ser configuradas separadamente em cada computador.
+   Para o Chrome no mesmo computador, em outro terminal:
+
+   ```bash
+   cd front-end
+   npx expo start --web
+   ```
+
+   Confirme a API abrindo `http://localhost:3000/health`, depois abra a URL web do Expo. Para executar opcionalmente no Expo Go em outro dispositivo, use `npm run start --workspace @monezy/front-end -- --lan` e configure `EXPO_PUBLIC_API_URL` com o IP local do computador. As variáveis `.env` são locais e precisam ser configuradas separadamente em cada computador.
 
 ## Demonstração acadêmica
 
 1. Inicie o backend e o Expo conforme [docs/INSTALACAO.md](./docs/INSTALACAO.md).
-2. Entre com o usuário de teste configurado no Firebase Authentication.
+2. Entre com e-mail e senha do usuário de teste configurado no Firebase Authentication. Use **Continuar em demonstração** apenas para navegar com valores fictícios; esse modo não acessa a API nem persiste movimentações.
 3. Confira o limite total, utilizado e disponível no dashboard; use **Atualizar resumo** para buscar novamente pela API.
 4. Registre uma movimentação com descrição e valor fictício. Em dispositivo compatível, o app emite feedback tátil após a resposta bem-sucedida da API.
 5. Edite e exclua a movimentação e confira o histórico e o limite atualizado.
-6. Abra o perfil e encerre a sessão.
+6. Abra o perfil e encerre a sessão. No Chrome, pressione **F12** e ative **Toggle device toolbar** para conferir a largura mobile.
 
-O modo demonstração usa indicadores fictícios e não persiste movimentações. A validação de haptics em um aparelho físico ainda depende de execução local com Expo Go ou build nativo.
+O modo demonstração usa indicadores fictícios e não persiste movimentações. O feedback tátil `expo-haptics` só funciona em dispositivo/build nativo e não pode ser validado pelo DevTools mobile do Chrome.
 
 O frontend e o backend são workspaces npm independentes. Configure as variáveis de ambiente em `front-end/.env` e `server/.env` antes de usar os serviços Firebase e a API.
 

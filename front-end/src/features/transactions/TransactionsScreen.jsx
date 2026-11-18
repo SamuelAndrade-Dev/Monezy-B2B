@@ -1,6 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Platform, ScrollView, StyleSheet, View } from "react-native";
-import { ActivityIndicator, Button, Card, Menu, Text, TextInput } from "react-native-paper";
+import { Platform, ScrollView, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  Button,
+  Card,
+  Dialog,
+  Menu,
+  Portal,
+  Snackbar,
+  Text,
+  TextInput
+} from "react-native-paper";
 import * as Haptics from "expo-haptics";
 import Screen from "../../components/layout/Screen";
 import { colors } from "../../constants/colors";
@@ -30,6 +40,8 @@ export default function TransactionsScreen() {
   const [loadError, setLoadError] = useState("");
   const [formError, setFormError] = useState("");
   const [menuVisible, setMenuVisible] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const [pendingDelete, setPendingDelete] = useState(null);
 
   const load = useCallback(async () => {
     setLoadError("");
@@ -42,7 +54,16 @@ export default function TransactionsScreen() {
         ? accountId
         : availableAccounts[0]?.id || "";
       setAccountId(selectedAccountId);
-      setItems(selectedAccountId ? await listTransactions(token, selectedAccountId) : []);
+      if (!selectedAccountId) {
+        setItems([]);
+        return;
+      }
+      try {
+        setItems(await listTransactions(token, selectedAccountId));
+      } catch (error) {
+        setItems([]);
+        setLoadError(error.message);
+      }
     } catch (error) {
       setAccounts([]);
       setItems([]);
@@ -69,7 +90,7 @@ export default function TransactionsScreen() {
       return;
     }
     if (!accountId) {
-      Alert.alert("Conta necessária", "Nenhuma conta empresarial foi vinculada a este usuário.");
+      setFormError("Nenhuma conta empresarial foi vinculada a este usuário.");
       return;
     }
     setFormError("");
@@ -93,9 +114,9 @@ export default function TransactionsScreen() {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
           .catch((error) => console.warn("Não foi possível executar o feedback tátil.", error));
       }
-      Alert.alert("Sucesso", editingId ? "Movimentação atualizada." : "Movimentação simulada registrada.");
+      setFeedback(editingId ? "Movimentação atualizada." : "Movimentação simulada registrada.");
     } catch (error) {
-      Alert.alert("Não foi possível salvar", error.message);
+      setFeedback(`Não foi possível salvar: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -121,16 +142,15 @@ export default function TransactionsScreen() {
       await deleteTransaction(item.id, token);
       if (editingId === item.id) cancelEdit();
       await load();
+      setPendingDelete(null);
+      setFeedback("Movimentação excluída.");
     } catch (error) {
-      Alert.alert("Não foi possível excluir", error.message);
+      setFeedback(`Não foi possível excluir: ${error.message}`);
     }
   }
 
   function confirmRemove(item) {
-    Alert.alert("Excluir movimentação", `Deseja excluir "${item.title}"?`, [
-      { text: "Cancelar", style: "cancel" },
-      { text: "Excluir", style: "destructive", onPress: () => remove(item) }
-    ]);
+    setPendingDelete(item);
   }
 
   const selectedAccount = accounts.find((item) => item.id === accountId);
@@ -211,6 +231,31 @@ export default function TransactionsScreen() {
           Movimentações apenas simuladas; nenhum pagamento é realizado.
         </Text>
       </ScrollView>
+      <Portal>
+        <Dialog visible={Boolean(pendingDelete)} onDismiss={() => setPendingDelete(null)}>
+          <Dialog.Title>Excluir movimentação</Dialog.Title>
+          <Dialog.Content>
+            <Text>Deseja excluir “{pendingDelete?.title}”?</Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setPendingDelete(null)}>Cancelar</Button>
+            <Button
+              textColor={colors.error}
+              onPress={() => pendingDelete && remove(pendingDelete)}
+            >
+              Excluir
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+        <Snackbar
+          visible={Boolean(feedback)}
+          onDismiss={() => setFeedback("")}
+          duration={4000}
+          action={{ label: "Fechar", onPress: () => setFeedback("") }}
+        >
+          {feedback}
+        </Snackbar>
+      </Portal>
     </Screen>
   );
 }

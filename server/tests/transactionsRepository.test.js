@@ -130,6 +130,47 @@ test("editing recalculates used limit and deleting restores it", async () => {
   assert.equal(documents.has(`companies/company-1/transactions/${transaction.id}`), false);
 });
 
+test("lists account transactions newest first without a composite-index query", async () => {
+  const toTimestamp = (value) => ({ toDate: () => new Date(value) });
+  const docs = [
+    { id: "older", data: () => ({ accountId: "account-1", title: "Older", amount: 10, createdAt: toTimestamp("2026-01-01T10:00:00.000Z") }) },
+    { id: "newer", data: () => ({ accountId: "account-1", title: "Newer", amount: 20, createdAt: toTimestamp("2026-01-02T10:00:00.000Z") }) },
+    { id: "missing-date", data: () => ({ accountId: "account-1", title: "Missing date", amount: 5 }) }
+  ];
+  let whereCall;
+  const query = {
+    where(...args) {
+      whereCall = args;
+      return this;
+    },
+    async get() {
+      return { docs };
+    }
+  };
+  const db = {
+    collection(name) {
+      assert.equal(name, "companies");
+      return {
+        doc(companyId) {
+          assert.equal(companyId, "company-1");
+          return {
+            collection(collectionName) {
+              assert.equal(collectionName, "transactions");
+              return query;
+            }
+          };
+        }
+      };
+    }
+  };
+  const repository = createTransactionsRepository({ db });
+
+  const result = await repository.list("company-1", "account-1");
+
+  assert.deepEqual(whereCall, ["accountId", "==", "account-1"]);
+  assert.deepEqual(result.map((transaction) => transaction.id), ["newer", "older"]);
+});
+
 test("rejects an edit above the available limit without changing stored values", async () => {
   const transaction = {
     id: "transaction-1",
