@@ -7,7 +7,7 @@ Instale Node.js 22 ou superior e npm. Para testar no celular, instale Expo Go. P
 Na raiz do repositório, instale os workspaces com:
 
 ```bash
-npm install
+npm ci
 ```
 
 O Expo Router, React Native Paper e Firebase Client estão declarados em `front-end/package.json`; Express e Firebase Admin, em `server/package.json`. Não instale NativeWind, Tailwind ou Zustand.
@@ -33,6 +33,8 @@ Crie `server/.env` a partir do exemplo:
 cp server/.env.example server/.env
 ```
 Configure `FIREBASE_PROJECT_ID` e uma credencial Firebase Admin fora do repositório: `FIREBASE_SERVICE_ACCOUNT_JSON` (JSON em uma única variável) ou `GOOGLE_APPLICATION_CREDENTIALS` (caminho protegido para arquivo de credenciais). Nunca coloque essa credencial no app ou versione o arquivo. `CORS_ORIGIN` aceita uma lista de origens separadas por vírgula. Em desenvolvimento, pode-se usar o emulador Firestore com `FIRESTORE_EMULATOR_HOST`.
+
+O projeto Firebase esperado é `app-financas-61857`. O ID já está nos exemplos de ambiente; preencha as demais configurações do app Web em `front-end/.env` e configure as credenciais administrativas apenas no backend.
 
 Crie `users/{uid}` no Firestore para cada usuário permitido e associe `companyId`. Em `companies/{companyId}/accounts/{accountId}`, configure `name`, `creditLimit`, `usedLimit` e, opcionalmente, `currency`. A identidade da empresa vem do perfil lido pelo servidor; o cliente não pode escolher outra empresa.
 
@@ -62,6 +64,10 @@ Execute `npm test` na raiz para os testes HTTP do backend. Sem credenciais Fireb
 - API inacessível no aparelho físico: confira o IP configurado em `EXPO_PUBLIC_API_URL`, a rede local e `CORS_ORIGIN`.
 - Firebase sem configuração: confira os arquivos `.env` de cada workspace e reinicie o Expo/servidor.
 - `COMPANY_ACCESS_REQUIRED`: crie o documento `users/{uid}` e defina seu `companyId`.
+- O dashboard mostra erro em vez de substituir falhas da API por limites fictícios. O modo demonstração é explícito e não persiste movimentações.
 
-## 7. Nota sobre operações
+## 7. Demonstração e recurso nativo
+Entre com o usuário de teste, consulte os limites, registre uma movimentação com valor fictício, edite-a, exclua-a e confirme a atualização do limite. O app usa `expo-haptics` para emitir feedback tátil quando uma nova movimentação é registrada com sucesso. Esse recurso precisa ser demonstrado em dispositivo compatível ou build nativo; a verificação de execução física não pode ser feita apenas pelos testes automatizados.
+
+## 8. Nota sobre operações
 Movimentações apenas simulam o uso do limite empresarial. Nenhuma transação bancária real é processada.

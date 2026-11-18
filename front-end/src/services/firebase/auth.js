@@ -22,6 +22,17 @@ export async function signIn(email, password) {
   return result.user;
 }
 
+export function getAuthErrorMessage(error) {
+  const messages = {
+    "auth/invalid-email": "Informe um endereço de e-mail válido.",
+    "auth/invalid-credential": "E-mail ou senha incorretos.",
+    "auth/user-disabled": "Esta conta está desativada.",
+    "auth/too-many-requests": "Muitas tentativas. Aguarde e tente novamente.",
+    "auth/network-request-failed": "Não foi possível conectar ao Firebase. Verifique sua rede."
+  };
+  return messages[error?.code] || error?.message || "Não foi possível autenticar.";
+}
+
 export async function signOutUser() {
   await signOut(requireAuth());
 }
