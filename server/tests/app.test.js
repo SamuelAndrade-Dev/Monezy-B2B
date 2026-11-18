@@ -14,6 +14,16 @@ transactionRouter.post("/", (req, res) => res.status(201).json({ transaction: re
 before(async () => {
   const app = createApp({
     verifyToken: async (token) => {
+      if (token === "revoked-test-token") {
+        const error = new Error("revoked token");
+        error.code = "auth/id-token-revoked";
+        throw error;
+      }
+      if (token === "disabled-test-token") {
+        const error = new Error("disabled user");
+        error.code = "auth/user-disabled";
+        throw error;
+      }
       if (token !== "valid-test-token") {
         const error = new Error("invalid token");
         error.code = "auth/invalid-id-token";
@@ -60,6 +70,22 @@ test("business endpoints pass the verified identity to route handlers", async ()
 test("invalid Firebase tokens return a structured error", async () => {
   const response = await fetch(`${baseUrl}/api/v1/accounts`, {
     headers: { Authorization: "Bearer expired-token" }
+  });
+  assert.equal(response.status, 401);
+  assert.equal((await response.json()).error.code, "INVALID_TOKEN");
+});
+
+test("revoked Firebase tokens return a structured error", async () => {
+  const response = await fetch(`${baseUrl}/api/v1/accounts`, {
+    headers: { Authorization: "Bearer revoked-test-token" }
+  });
+  assert.equal(response.status, 401);
+  assert.equal((await response.json()).error.code, "INVALID_TOKEN");
+});
+
+test("disabled Firebase users are rejected as unauthenticated", async () => {
+  const response = await fetch(`${baseUrl}/api/v1/accounts`, {
+    headers: { Authorization: "Bearer disabled-test-token" }
   });
   assert.equal(response.status, 401);
   assert.equal((await response.json()).error.code, "INVALID_TOKEN");

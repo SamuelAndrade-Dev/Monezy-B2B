@@ -56,6 +56,17 @@ test("creates a simulated expense with normalized values and company scope", asy
   ]);
 });
 
+test("accepts common two-decimal values without floating-point false rejection", async () => {
+  const { service } = createHarness();
+  const result = await service.create("user-1", {
+    accountId: "account-1",
+    title: "Lanche",
+    amount: 0.29
+  });
+
+  assert.equal(result.amount, 0.29);
+});
+
 test("rejects invalid values before attempting to write", async () => {
   const { calls, service } = createHarness();
   await assert.rejects(
@@ -67,6 +78,18 @@ test("rejects invalid values before attempting to write", async () => {
     { code: "INVALID_AMOUNT", status: 400 }
   );
   assert.equal(calls.length, 0);
+});
+
+test("updates and deletes transactions within the authenticated company", async () => {
+  const { calls, service } = createHarness();
+
+  await service.update("user-1", "transaction-1", { title: "Almoço", amount: 200 });
+  await service.remove("user-1", "transaction-1");
+
+  assert.deepEqual(calls, [
+    ["company-1", "user-1", "transaction-1", { title: "Almoço", amount: 200 }],
+    ["company-1", "transaction-1"]
+  ]);
 });
 
 test("rejects accounts outside the user's company", async () => {

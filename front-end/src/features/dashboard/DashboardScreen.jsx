@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
+import { useFocusEffect } from "expo-router";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { ActivityIndicator, Button, Text } from "react-native-paper";
 import MetricCard from "../../components/ui/MetricCard";
@@ -57,9 +58,9 @@ export default function DashboardScreen() {
     }
   }, [demoMode, getIdToken]);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     loadLimits();
-  }, [loadLimits]);
+  }, [loadLimits]));
 
   const availablePercent = limits?.totalLimit
     ? (limits.availableLimit / limits.totalLimit) * 100

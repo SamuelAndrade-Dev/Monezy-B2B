@@ -15,7 +15,11 @@ function validateAmount(amount) {
     throw new AppError(400, "INVALID_AMOUNT", "O valor deve ser enviado como número.");
   }
   const value = Number(amount);
-  if (!Number.isFinite(value) || value <= 0 || Math.round(value * 100) !== value * 100) {
+  const amountInCents = Math.round(value * 100);
+  if (
+    !Number.isFinite(value) || value <= 0 ||
+    !Number.isSafeInteger(amountInCents) || amountInCents / 100 !== value
+  ) {
     throw new AppError(400, "INVALID_AMOUNT", "O valor deve ser positivo e ter no máximo duas casas decimais.");
   }
   return value;
