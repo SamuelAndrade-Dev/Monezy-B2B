@@ -31,7 +31,7 @@ npm start
 
    No Windows PowerShell, use `Copy-Item front-end/.env.example front-end/.env` e `Copy-Item server/.env.example server/.env`.
 3. No `front-end/.env`, preencha os valores da aplicação Web Firebase (`EXPO_PUBLIC_FIREBASE_API_KEY`, `EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN`, `EXPO_PUBLIC_FIREBASE_PROJECT_ID` e `EXPO_PUBLIC_FIREBASE_APP_ID`). Para consultar os valores, use **Configurações do projeto → Geral → Seus apps** no Firebase Console. A API key do Firebase Client não é uma credencial administrativa; nunca coloque chaves privadas nas variáveis `EXPO_PUBLIC_*`.
-4. No `server/.env`, mantenha o Project ID e configure **uma** forma de credencial Admin: `GOOGLE_APPLICATION_CREDENTIALS` com o caminho absoluto para o arquivo JSON privado, ou `FIREBASE_SERVICE_ACCOUNT_JSON`. Prefira guardar o arquivo fora do repositório. Não envie nem versione o arquivo ou seu conteúdo.
+4. No `server/.env`, mantenha o Project ID e configure uma credencial Admin: prefira ADC (`gcloud auth application-default login`, com permissões IAM adequadas) ou `GOOGLE_APPLICATION_CREDENTIALS` com o caminho absoluto para o arquivo ADC/JSON privado. `FIREBASE_SERVICE_ACCOUNT_JSON` também é suportado, mas não coloque a chave no Git. Prefira guardar arquivos de credencial fora do repositório; não envie nem versione o arquivo ou seu conteúdo.
 5. Se o Expo Go estiver em outro dispositivo, conecte-o à mesma rede Wi-Fi do computador que executa o backend. Descubra o IP local desse computador e configure no `front-end/.env`:
 
    ```env

@@ -32,7 +32,9 @@ Crie `server/.env` a partir do exemplo:
 ```bash
 cp server/.env.example server/.env
 ```
-Configure `FIREBASE_PROJECT_ID` e uma credencial Firebase Admin fora do repositório: `FIREBASE_SERVICE_ACCOUNT_JSON` (JSON em uma única variável) ou `GOOGLE_APPLICATION_CREDENTIALS` (caminho protegido para arquivo de credenciais). Nunca coloque essa credencial no app ou versione o arquivo. `CORS_ORIGIN` aceita uma lista de origens separadas por vírgula. Em desenvolvimento, pode-se usar o emulador Firestore com `FIRESTORE_EMULATOR_HOST`.
+Configure `FIREBASE_PROJECT_ID` e uma credencial Firebase Admin. Prefira ADC local configurado por `gcloud auth application-default login`, com permissões IAM adequadas, ou `GOOGLE_APPLICATION_CREDENTIALS` apontando para um arquivo ADC/JSON protegido fora do repositório. `FIREBASE_SERVICE_ACCOUNT_JSON` também é suportado, mas não coloque a chave no app nem versione o arquivo. `CORS_ORIGIN` aceita uma lista de origens separadas por vírgula. Em desenvolvimento, pode-se usar o emulador Firestore com `FIRESTORE_EMULATOR_HOST`.
+
+O exemplo inclui as duas variáveis de credenciais vazias. Configure somente uma. Para usar ADC por arquivo local, defina `GOOGLE_APPLICATION_CREDENTIALS` com o caminho absoluto do arquivo de chave, guardado fora do repositório. O app de demonstração não precisa de uma chave administrativa em `front-end/.env`.
 
 O projeto Firebase esperado é `app-financas-61857`. O ID já está nos exemplos de ambiente; preencha as demais configurações do app Web em `front-end/.env` e configure as credenciais administrativas apenas no backend.
 
@@ -60,11 +62,12 @@ npm run start --workspace @monezy/front-end -- --clear
 ## 6. Testes e problemas comuns
 Execute `npm test` na raiz para os testes HTTP do backend. Sem credenciais Firebase, a API inicia e responde no endpoint `/health`, mas chamadas protegidas retornam `FIREBASE_NOT_CONFIGURED`.
 
-- `Unable to resolve module`: execute `npm install` na raiz e reinicie o Expo.
+- `Unable to resolve module`: execute `npm ci` na raiz e reinicie o Expo.
 - API inacessível no aparelho físico: confira o IP configurado em `EXPO_PUBLIC_API_URL`, a rede local e `CORS_ORIGIN`.
 - Firebase sem configuração: confira os arquivos `.env` de cada workspace e reinicie o Expo/servidor.
 - `COMPANY_ACCESS_REQUIRED`: crie o documento `users/{uid}` e defina seu `companyId`.
 - O dashboard mostra erro em vez de substituir falhas da API por limites fictícios. O modo demonstração é explícito e não persiste movimentações.
+- A consulta real ao Firestore requer Authentication configurado no frontend e credenciais Firebase Admin no backend; sem elas, endpoints protegidos respondem com erro, não com dados de demonstração.
 
 ## 7. Demonstração e recurso nativo
 Entre com o usuário de teste, consulte os limites, registre uma movimentação com valor fictício, edite-a, exclua-a e confirme a atualização do limite. O app usa `expo-haptics` para emitir feedback tátil quando uma nova movimentação é registrada com sucesso. Esse recurso precisa ser demonstrado em dispositivo compatível ou build nativo; a verificação de execução física não pode ser feita apenas pelos testes automatizados.

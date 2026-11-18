@@ -5,7 +5,8 @@ const invalidTokenCodes = new Set([
   "auth/id-token-expired",
   "auth/id-token-revoked",
   "auth/invalid-id-token",
-  "auth/invalid-credential"
+  "auth/invalid-credential",
+  "auth/user-disabled"
 ]);
 
 export function createRequireAuth(verifyIdToken) {
